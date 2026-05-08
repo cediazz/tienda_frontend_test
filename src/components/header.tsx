@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, LogIn, Home, Package, MapPin, Menu, X } from "lucide-react";
+import {
+  ShoppingCart,
+  LogIn,
+  Home,
+  Package,
+  MapPin,
+  Menu,
+  X,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +21,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useCart } from "@/context/cartContext";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { itemCount } = useCart();
 
   const navItems = [
     { name: "Inicio", href: "/", icon: Home },
@@ -28,7 +38,10 @@ export function Header() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo y Nombre */}
-          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition">
+          <Link
+            href="/"
+            className="flex items-center space-x-2 hover:opacity-80 transition"
+          >
             <span className="font-bold text-xl text-primary">TiendaLogo</span>
           </Link>
 
@@ -48,15 +61,21 @@ export function Header() {
 
           {/* Acciones Desktop */}
           <div className="hidden md:flex items-center space-x-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Link href="/cart">
+            <Button
+              variant="outline"
+              size="icon"
               aria-label="Carrito"
               className="relative hover:bg-gray-100"
-              onClick={() => console.log("Abrir carrito")}
             >
               <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full text-xs h-5 w-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
             </Button>
+            </Link>
 
             <Dialog>
               <DialogTrigger asChild>
@@ -91,9 +110,9 @@ export function Header() {
 
           {/* Menú Móvil (Responsive) */}
           <div className="flex md:hidden items-center space-x-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               aria-label="Carrito"
               onClick={() => console.log("Abrir carrito móvil")}
             >

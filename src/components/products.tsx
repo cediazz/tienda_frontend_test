@@ -10,14 +10,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Search, ShoppingCart, Filter, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search, ShoppingCart, Filter } from "lucide-react";
 import { Product } from "@/interfaces/productInterfaces";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/context/cartContext";
 
 export default function Products({ products }: { products: Product[] }) {
+  
   const [category, setCategory] = useState("");
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.title,
+      price: product.price,
+      image_url: product.image
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -139,9 +150,7 @@ export default function Products({ products }: { products: Product[] }) {
                   <CardFooter>
                     <Button
                       className="w-full gap-2"
-                      onClick={() =>
-                        console.log(`Agregar ${product.title} al carrito`)
-                      }
+                      onClick={() => handleAddToCart(product)}
                     >
                       <ShoppingCart className="h-4 w-4" />
                       Agregar al carrito
