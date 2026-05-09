@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,27 +7,44 @@ import { ShoppingCart, Truck, Shield } from "lucide-react";
 import Image from "next/image";
 import { Product } from "@/interfaces/productInterfaces";
 import Link from "next/link";
+import { useCart } from "@/context/cartContext";
 
-interface productDetailProps{
-    product:Product
+interface productDetailProps {
+  product: Product;
 }
 
-export default async function ProductDetail({product}:productDetailProps) {
-  
+export default function ProductDetail({ product }: productDetailProps) {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.title,
+      price: product.price,
+      image_url: product.image,
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500">
         <ol className="flex flex-wrap items-center gap-2">
           <li>
-            <Link href="/" className="hover:text-primary transition">Inicio</Link>
+            <Link href="/" className="hover:text-primary transition">
+              Inicio
+            </Link>
           </li>
           <li>/</li>
           <li>
-            <Link href="/products" className="hover:text-primary transition">Productos</Link>
+            <Link href="/products" className="hover:text-primary transition">
+              Productos
+            </Link>
           </li>
           <li>/</li>
-          <li className="text-gray-700 font-medium truncate">{product.title}</li>
+          <li className="text-gray-700 font-medium truncate">
+            {product.title}
+          </li>
         </ol>
       </nav>
 
@@ -110,7 +129,11 @@ export default async function ProductDetail({product}:productDetailProps) {
 
           {/* Botones de acción */}
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Button size="lg" className="flex-1 gap-2">
+            <Button
+              size="lg"
+              className="flex-1 gap-2"
+              onClick={() => handleAddToCart(product)}
+            >
               <ShoppingCart className="h-5 w-5" />
               Agregar al carrito
             </Button>
