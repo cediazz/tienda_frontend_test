@@ -22,7 +22,7 @@ export function Header() {
   const navItems = [
     { name: "Inicio", href: "/", icon: Home },
     { name: "Productos", href: "/products", icon: Package },
-    { name: "Destinos", href: "/destinos", icon: MapPin },
+    { name: "Destinos", href: "/addresses", icon: MapPin },
   ];
 
   return (

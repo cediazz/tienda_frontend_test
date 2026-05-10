@@ -1,52 +1,64 @@
 "use client";
+
+import { useState } from "react";
 import { useCart } from "@/context/cartContext";
+import { useAddresses } from "@/context/AddressContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, CreditCard } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, CreditCard, MapPin, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, clearCart, total, itemCount } = useCart();
+  const { addresses, isLoading: addressesLoading } = useAddresses();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+
+  // Encontrar la dirección seleccionada
+  const selectedAddress = addresses.find(a => a.id.toString() === selectedAddressId);
+  const hasAddresses = addresses.length > 0;
+
+  // Si hay direcciones y ninguna seleccionada, seleccionar la primera o predeterminada
+  if (hasAddresses && !selectedAddressId) {
+    const defaultAddress = addresses.find(a => a.isDefault);
+    setSelectedAddressId(defaultAddress ? defaultAddress.id.toString() : addresses[0].id.toString());
+  }
 
   const handleCreateOrder = async () => {
-    setIsCreatingOrder(true);
+    if (!selectedAddress) return;
     
+    setIsCreatingOrder(true);
     try {
-      // Preparar los datos de la orden
       const orderData = {
         items: items.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          name: item.name
         })),
         total: total,
+        shipping_cost: total > 50 ? 0 : 5,
+        address: selectedAddress,
         status: "pending",
         created_at: new Date().toISOString()
       };
       
       console.log("Creando orden:", orderData);
-      
-      // Aquí iría la llamada a tu API para crear la orden
-      // const response = await fetch('/api/orders', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(orderData)
-      // });
-      
-      // Simular llamada a API
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       alert("Orden creada exitosamente");
-      // clearCart(); // Opcional: limpiar carrito después de crear orden
       
     } catch (error) {
-      console.error("Error al crear orden:", error);
-      alert("Error al crear la orden. Por favor, intenta de nuevo.");
+      console.error("Error:", error);
+      alert("Error al crear la orden");
     } finally {
       setIsCreatingOrder(false);
     }
@@ -62,9 +74,7 @@ export default function Cart() {
                 <ShoppingBag className="h-12 w-12 text-gray-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Tu carrito está vacío</h2>
-              <p className="text-gray-600">
-                Parece que aún no has agregado productos a tu carrito.
-              </p>
+              <p className="text-gray-600">Parece que aún no has agregado productos a tu carrito.</p>
               <Link href="/products">
                 <Button className="mt-4 gap-2">
                   <ShoppingBag className="h-4 w-4" />
@@ -81,15 +91,16 @@ export default function Cart() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Columna izquierda - Lista de productos */}
+        {/* Columna izquierda - Productos */}
         <div className="flex-1">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               Mi Carrito ({itemCount} {itemCount === 1 ? "producto" : "productos"})
             </h1>
-            <Button
-              variant="destructive"
-              onClick={clearCart}
+            <Button 
+              variant="ghost" 
+              onClick={clearCart} 
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Vaciar carrito
@@ -100,30 +111,29 @@ export default function Cart() {
             {items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <div className="flex flex-col sm:flex-row gap-4 p-4">
-                  {/* Imagen del producto */}
-                  <div className="relative w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image
-                      src={item.image_url}
-                      alt={item.name}
-                      fill
+                  {/* Imagen */}
+                  <div className="relative w-full sm:w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <Image 
+                      src={item.image_url} 
+                      alt={item.name} 
+                      fill 
                       className="object-contain p-2"
-                      sizes="128px"
                     />
                   </div>
-
-                  {/* Información del producto */}
-                  <div className="flex-1 space-y-2">
+                  
+                  {/* Información */}
+                  <div className="flex-1">
                     <Link href={`/products/${item.id}`}>
                       <h3 className="font-semibold text-gray-900 hover:text-primary transition line-clamp-2">
                         {item.name}
                       </h3>
                     </Link>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-xl font-bold text-primary mt-1">
                       ${item.price.toFixed(2)}
                     </p>
                   </div>
-
-                  {/* Controles de cantidad */}
+                  
+                  {/* Controles */}
                   <div className="flex items-center justify-between sm:justify-end gap-4">
                     <div className="flex items-center gap-2">
                       <Button
@@ -172,36 +182,107 @@ export default function Cart() {
           </div>
         </div>
 
-        {/* Columna derecha - Resumen de la orden */}
-        <div className="lg:w-96">
-          <Card className="sticky top-24">
+        {/* Columna derecha - Resumen y dirección */}
+        <div className="lg:w-96 space-y-4">
+          {/* Sección de dirección de envío */}
+          <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Resumen de la orden</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Dirección de envío
+              </CardTitle>
             </CardHeader>
-            
             <CardContent className="space-y-4">
-              {/* Lista de costos */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${total.toFixed(2)}</span>
+              {addressesLoading ? (
+                <div className="space-y-2">
+                  <div className="h-10 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-20 bg-gray-100 rounded animate-pulse" />
                 </div>
-                <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">
-                    ${total.toFixed(2)}
-                  </span>
+              ) : !hasAddresses ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-gray-600 mb-3">
+                    No tienes direcciones guardadas
+                  </p>
+                  <Link href="/addresses">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <PlusCircle className="h-4 w-4" />
+                      Agregar dirección
+                    </Button>
+                  </Link>
                 </div>
+              ) : (
+                <>
+                  {/* Selector de direcciones */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Seleccionar dirección
+                    </label>
+                    <Select 
+                      value={selectedAddressId} 
+                      onValueChange={setSelectedAddressId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una dirección" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {addresses.map((address) => (
+                          <SelectItem key={address.id} value={address.id.toString()}>
+                            {address.name} {address.isDefault && "(Predeterminada)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Mostrar dirección seleccionada */}
+                  {selectedAddress && (
+                    <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
+                      <p className="font-medium">{selectedAddress.name}</p>
+                      <p className="text-gray-600">{selectedAddress.phone}</p>
+                      <p className="text-gray-600">{selectedAddress.address}</p>
+                      <p className="text-gray-600">{selectedAddress.municipality}</p>
+                      {selectedAddress.notes && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          📝 {selectedAddress.notes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <Link href="/addresses">
+                    <Button variant="link" size="sm" className="text-primary w-full">
+                      Gestionar direcciones →
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Resumen de la orden */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumen de la orden</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">${total.toFixed(2)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total</span>
+                <span className="text-primary">
+                  ${total.toFixed(2)}
+                </span>
               </div>
             </CardContent>
-
             <CardFooter>
               <Button
                 className="w-full gap-2"
                 size="lg"
                 onClick={handleCreateOrder}
-                disabled={isCreatingOrder}
+                disabled={!hasAddresses || !selectedAddress || isCreatingOrder}
               >
                 <CreditCard className="h-4 w-4" />
                 {isCreatingOrder ? "Procesando..." : "Crear orden"}
