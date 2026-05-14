@@ -15,18 +15,19 @@ import { Product } from "@/interfaces/productInterfaces";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/cartContext";
+import ProductImage from "./productImage";
 
 export default function Products({ products }: { products: Product[] }) {
-  
   const [category, setCategory] = useState("");
   const { addItem } = useCart();
+  const [imageError, setImageError] = useState(false);
 
   const handleAddToCart = (product: Product) => {
     addItem({
       id: product.id,
       name: product.title,
       price: product.price,
-      image_url: product.image
+      image_url: product.image,
     });
   };
 
@@ -120,19 +121,8 @@ export default function Products({ products }: { products: Product[] }) {
                   key={product.id}
                   className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-gray-100"
                 >
-                  <div className="aspect-square bg-gray-100 relative">
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Link href={`/products/${product.id}`}>
-                      <Image
-                        src={product.image}
-                        alt={product.title}
-                        width={200}
-                        height={200}
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        //onError={() => setImageError(true)}
-                      />
-                      </Link>
-                    </div>
+                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                    <ProductImage product={product} />
                   </div>
                   <CardHeader>
                     <CardTitle className="line-clamp-2 text-lg text-gray-900">
